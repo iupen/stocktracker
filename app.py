@@ -5,6 +5,7 @@ Features
 --------
 * Login/password gate backed by app_users (PBKDF2 hashes).
 * SHARED watchlist: everyone sees all friends' entries with an "Added by" column.
+* Refresh button to re-pull the group watchlist without logging out.
 * "Add to Watchlist" form: ticker + sentiment + optional thesis + optional price.
 * Edit / remove limited to YOUR OWN rows.
 
@@ -225,14 +226,17 @@ def render_app() -> None:
     user = st.session_state["user"]
     user_id = user["user_id"]
 
-    top = st.container()
-    with top:
-        col1, col2 = st.columns([3, 1])
-        col1.title("📈 StockTracker")
-        col1.caption(f"Signed in as **{user['display_name']}**")
-        if col2.button("Log out"):
-            st.session_state.pop("user", None)
-            st.rerun()
+    # Header row: title + Refresh + Log out.
+    col1, col2, col3 = st.columns([3, 1, 1])
+    col1.title("📈 StockTracker")
+    col1.caption(f"Signed in as **{user['display_name']}**")
+    # A button click reruns the script, which re-queries the DB below — so this
+    # pulls in entries other friends have added without logging out.
+    if col2.button("🔄 Refresh", use_container_width=True):
+        st.rerun()
+    if col3.button("Log out", use_container_width=True):
+        st.session_state.pop("user", None)
+        st.rerun()
 
     st.divider()
     render_add_form(user_id)
